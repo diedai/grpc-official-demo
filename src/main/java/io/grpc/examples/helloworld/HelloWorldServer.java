@@ -91,6 +91,12 @@ public class HelloWorldServer {
       HelloReply reply = HelloReply.newBuilder().setMessage("Hello " + req.getName()).build();
       responseObserver.onNext(reply);
       responseObserver.onCompleted();
+      
+//      try {
+//		Thread.sleep(1);
+//	} catch (InterruptedException e) {
+//		e.printStackTrace();
+//	}
     }
   }
 }

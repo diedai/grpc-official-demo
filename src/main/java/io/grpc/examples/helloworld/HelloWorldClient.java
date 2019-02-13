@@ -27,59 +27,103 @@ import java.util.logging.Logger;
  * A simple client that requests a greeting from the {@link HelloWorldServer}.
  */
 public class HelloWorldClient {
-  private static final Logger logger = Logger.getLogger(HelloWorldClient.class.getName());
+	private static final Logger logger = Logger.getLogger(HelloWorldClient.class.getName());
 
-  private final ManagedChannel channel;
-  private final GreeterGrpc.GreeterBlockingStub blockingStub;
+	private final ManagedChannel channel;
+	private final GreeterGrpc.GreeterBlockingStub blockingStub;
 
-  /** Construct client connecting to HelloWorld server at {@code host:port}. */
-  public HelloWorldClient(String host, int port) {
-    this(ManagedChannelBuilder.forAddress(host, port)
-        // Channels are secure by default (via SSL/TLS). For the example we disable TLS to avoid
-        // needing certificates.
-        .usePlaintext()
-        .build());
-  }
+	/** Construct client connecting to HelloWorld server at {@code host:port}. */
+	public HelloWorldClient(String host, int port) {
+		this(ManagedChannelBuilder.forAddress(host, port)
+				// Channels are secure by default (via SSL/TLS). For the example we disable TLS
+				// to avoid
+				// needing certificates.
+				.usePlaintext().build());
+	}
 
-  /** Construct client for accessing HelloWorld server using the existing channel. */
-  HelloWorldClient(ManagedChannel channel) {
-    this.channel = channel;
-    blockingStub = GreeterGrpc.newBlockingStub(channel);
-  }
+	/**
+	 * Construct client for accessing HelloWorld server using the existing channel.
+	 */
+	HelloWorldClient(ManagedChannel channel) {
+		this.channel = channel;
+		blockingStub = GreeterGrpc.newBlockingStub(channel);
+	}
 
-  public void shutdown() throws InterruptedException {
-    channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
-  }
+	public void shutdown() throws InterruptedException {
+		channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
+	}
 
-  /** Say hello to server. */
-  public void greet(String name) {
-    logger.info("Will try to greet " + name + " ...");
-    HelloRequest request = HelloRequest.newBuilder().setName(name).build();
-    HelloReply response;
-    try {
-      response = blockingStub.sayHello(request); //同步阻塞调用远程服务 就和本地调用方法一样 //还有一种是异步 基于流观察者StreamObserver(服务器和客户端) 会回调onNext()方法
-    } catch (StatusRuntimeException e) {
-      logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
-      return;
-    }
-    logger.info("Greeting: " + response.getMessage());
-  }
+	/** Say hello to server. */
+	public void greet(String name) {
+		logger.info("Will try to greet " + name + " ...");
+		HelloRequest request = HelloRequest.newBuilder().setName(name).build();
+		HelloReply response;
+		try {
+			response = blockingStub.sayHello(request); // 同步阻塞调用远程服务 就和本地调用方法一样 //还有一种是异步 基于流观察者StreamObserver(服务器和客户端)
+														// 会回调onNext()方法
+		} catch (StatusRuntimeException e) {
+			logger.log(Level.WARNING, "RPC failed: {0}", e.getStatus());
+			return;
+		}
+		logger.info("Greeting: " + response.getMessage());
+	}
 
-  /**
-   * Greet server. If provided, the first element of {@code args} is the name to use in the
-   * greeting.
-   */
-  public static void main(String[] args) throws Exception {
-    HelloWorldClient client = new HelloWorldClient("localhost", 50051);
-    try {
-      /* Access a service running on the local machine on port 50051 */
-      String user = "world";
-      if (args.length > 0) {
-        user = args[0]; /* Use the arg as the name to greet if provided */
-      }
-      client.greet(user);
-    } finally {
-      client.shutdown();
-    }
-  }
+	/**
+	 * Greet server. If provided, the first element of {@code args} is the name to
+	 * use in the greeting.
+	 */
+//  public static void main(String[] args) throws Exception {
+//    HelloWorldClient client = new HelloWorldClient("localhost", 50051);
+//    try {
+//      /* Access a service running on the local machine on port 50051 */
+//      String user = "world";
+//      if (args.length > 0) {
+//        user = args[0]; /* Use the arg as the name to greet if provided */
+//      }
+//      client.greet(user);
+//    } finally {
+//      client.shutdown();
+//    }
+//  }
+
+	/**
+	 * 最大并发连接数
+	 * 
+	 * @param args
+	 * @throws Exception
+	 */
+	public static void main(String[] args) throws Exception {
+		
+		
+		for (int i = 0; i < 2000; i++) {
+			// 多线程
+//		  Thread thread = new Thread(new Task1());
+//		  thread.start();
+		}
+
+		// 非阻塞 所以也相当于是并发
+//		int i = 0;
+		//while (!Thread.interrupted()) {	
+		for (int i = 0; i < 1000; i++) {
+			HelloWorldClient client = new HelloWorldClient("localhost", 50051);
+			
+			try {
+				
+				/* Access a service running on the local machine on port 50051 */
+				String user = "world";
+
+				client.greet(user);
+
+//				System.out.println(Thread.currentThread().getId());
+				System.out.println(i++);
+			} finally {
+				try {
+					client.shutdown();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+	}
 }
